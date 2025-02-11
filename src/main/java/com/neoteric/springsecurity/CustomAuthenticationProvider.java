@@ -1,5 +1,8 @@
 package com.neoteric.springsecurity;
 
+
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,20 +11,32 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-
+import java.util.Optional;
 
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
+
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        String username = authentication.getName();
+        String rawPassword = authentication.getCredentials().toString();
 
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) authentication;
 
-        if (token.getPrincipal().toString().equalsIgnoreCase("arun") && token.getCredentials().toString().equalsIgnoreCase("1234")){
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(token.getPrincipal(),token.getCredentials(),new ArrayList<>());
-            return authenticationToken;
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isEmpty()) {
+            throw new BadCredentialsException("User not found");
         }
-        throw new BadCredentialsException("Invalid Username and Password");
+
+        User user = userOptional.get();
+
+        if (!rawPassword.equals(user.getPassword())) {
+            throw new BadCredentialsException("Invalid Username and Password");
+        }
+
+        return new UsernamePasswordAuthenticationToken(username, rawPassword, new ArrayList<>());
     }
 
     @Override
