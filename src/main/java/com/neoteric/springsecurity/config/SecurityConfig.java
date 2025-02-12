@@ -33,22 +33,38 @@ public class SecurityConfig {
         return new CustomAuthenticationFilter(authenticationManager);
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationFilter customAuthenticationFilter) throws Exception {
-        http
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationFilter customAuthenticationFilter) throws Exception {
+//        http
+//
+//                .authorizeHttpRequests(
+//                        authRequest -> authRequest.requestMatchers("/nonProtected").permitAll()
+//                                .requestMatchers("/protected").authenticated()
+//
+//                )
+//                .addFilterAt(customAuthenticationFilter, BasicAuthenticationFilter.class)
+//                .httpBasic(Customizer.withDefaults());
+//
+//
+//        return http.build();
 
-                .authorizeHttpRequests(
-                        authRequest -> authRequest.requestMatchers("/nonProtected").permitAll()
-                                .requestMatchers("/protected").authenticated()
 
-                )
-                .addFilterAt(customAuthenticationFilter, BasicAuthenticationFilter.class)
-                .httpBasic(Customizer.withDefaults());
+        @Bean
+        public SecurityFilterChain securityFilterChain (HttpSecurity http, CustomAuthenticationFilter
+        customAuthenticationFilter) throws Exception {
+            http
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers("/admin").hasRole("ADMIN")
+                            .requestMatchers("/finance").hasAnyRole("ADMIN", "FINANCE_ADMIN")
+                            .requestMatchers("/employee").hasAnyRole("ADMIN", "FINANCE_ADMIN", "EMPLOYEE")
+                            .anyRequest().authenticated()
+                    )
+                    .addFilterAt(customAuthenticationFilter, BasicAuthenticationFilter.class)
+                    .httpBasic(Customizer.withDefaults());
 
+            return http.build();
+        }
 
-
-        return http.build();
-    }
 
 
 
